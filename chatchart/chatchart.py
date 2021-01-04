@@ -5,11 +5,11 @@
 #  Thanks to violetnyte for suggesting this cog.
 
 import asyncio
-import discord
 import heapq
 from io import BytesIO
 from typing import Optional
 
+import discord
 import matplotlib
 
 matplotlib.use("agg")
@@ -20,7 +20,7 @@ plt.switch_backend("agg")
 from redbot.core import checks, commands, Config
 
 
-class Chatchart(commands.Cog):
+class Schreibzeig(commands.Cog):
     """Show activity."""
 
     async def red_delete_data_for_user(self, **kwargs):
@@ -49,7 +49,7 @@ class Chatchart(commands.Cog):
             channel_name = "{}...".format(channel.name[:19])
         else:
             channel_name = channel.name
-        title = plt.title("Stats in #{}".format(channel_name), color="white")
+        title = plt.title("Statisken in #{}".format(channel_name), color="white")
         title.set_va("top")
         title.set_ha("center")
         plt.gca().axis("equal")
@@ -97,7 +97,7 @@ class Chatchart(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.channel)
     @commands.max_concurrency(1, commands.BucketType.channel)
     @commands.bot_has_permissions(attach_files=True)
-    async def chatchart(self, ctx, channel: Optional[discord.TextChannel] = None, messages=5000):
+    async def schreibzeig(self, ctx, channel: Optional[discord.TextChannel] = None, messages=5000):
         """
         Generates a pie chart, representing the last 5000 messages in the specified channel.
         """
@@ -105,14 +105,15 @@ class Chatchart(commands.Cog):
             channel = ctx.channel
         deny = await self.config.guild(ctx.guild).channel_deny()
         if channel.id in deny:
-            return await ctx.send(f"I am not allowed to create a chatchart of {channel.mention}.")
+            return await ctx.send(
+                f"Von dem Kanal kann ich da wo ma kein statistik erstellen mein kerl: {channel.mention}.")
 
         message_limit = await self.config.limit()
         if (message_limit != 0) and (messages > message_limit):
             messages = message_limit
 
         e = discord.Embed(
-            description="This might take a while...", colour=await self.bot.get_embed_colour(location=channel)
+            description="Dies könnt a kurze weilä dauan...", colour=await self.bot.get_embed_colour(location=channel)
         )
         em = await ctx.send(embed=e)
 
@@ -124,7 +125,7 @@ class Chatchart(commands.Cog):
                 await em.delete()
             except discord.NotFound:
                 pass
-            return await ctx.send("You're not allowed to access that channel.")
+            return await ctx.send("Joa, du kannst da nicht uff den Kanal gucken mein Kerl.")
         try:
             async for msg in channel.history(limit=messages):
                 history.append(msg)
@@ -132,7 +133,7 @@ class Chatchart(commands.Cog):
                 await asyncio.sleep(0.005)
                 if history_counter % 250 == 0:
                     new_embed = discord.Embed(
-                        description=f"This might take a while...\n{history_counter}/{messages} messages gathered",
+                        description=f"Dies könnte a bissle Zeit dauern oder watt\n{history_counter}/{messages} Nachrichten zamgekratzt",
                         colour=await self.bot.get_embed_colour(location=channel),
                     )
                     if channel.permissions_for(ctx.guild.me).send_messages:
@@ -140,14 +141,14 @@ class Chatchart(commands.Cog):
                     try:
                         await em.edit(embed=new_embed)
                     except discord.NotFound:
-                        pass # for cases where the embed was deleted preventing the edit
+                        pass  # for cases where the embed was deleted preventing the edit
 
         except discord.errors.Forbidden:
             try:
                 await em.delete()
             except discord.NotFound:
                 pass
-            return await ctx.send("No permissions to read that channel.")
+            return await ctx.send("Keine Rechte den Kanal zu lesen.")
 
         msg_data = {"total count": 0, "users": {}}
         for msg in history:
@@ -171,7 +172,8 @@ class Chatchart(commands.Cog):
                 await em.delete()
             except discord.NotFound:
                 pass
-            return await ctx.send(f"Only bots have sent messages in {channel.mention} or I can't read message history.")
+            return await ctx.send(
+                f"Nur Roboter haben Nachrichten in {channel.mention} gesendet oder ich kann die Nachrichtenhistorie nich guckene.")
 
         for usr in msg_data["users"]:
             pd = float(msg_data["users"][usr]["msgcount"]) / float(msg_data["total count"])
@@ -200,24 +202,24 @@ class Chatchart(commands.Cog):
     @commands.guild_only()
     @commands.command()
     async def ccdeny(self, ctx, channel: discord.TextChannel):
-        """Add a channel to deny chatchart use."""
+        """Add a channel to deny schreibzeig use."""
         channel_list = await self.config.guild(ctx.guild).channel_deny()
         if channel.id not in channel_list:
             channel_list.append(channel.id)
         await self.config.guild(ctx.guild).channel_deny.set(channel_list)
-        await ctx.send(f"{channel.mention} was added to the deny list for chatchart.")
+        await ctx.send(f"{channel.mention} wurde zur Schreibzeig Verbotsliste hinzugefügt.")
 
     @checks.mod_or_permissions(manage_channels=True)
     @commands.guild_only()
     @commands.command()
     async def ccdenylist(self, ctx):
         """List the channels that are denied."""
-        no_channels_msg = "Chatchart is currently allowed everywhere in this server."
+        no_channels_msg = "Schreibzeig kannse da wo überall benutzene."
         channel_list = await self.config.guild(ctx.guild).channel_deny()
         if not channel_list:
             msg = no_channels_msg
         else:
-            msg = "Chatchart is not allowed in:\n"
+            msg = "Schreibzeig kannse nicht benutzene in:\n"
             remove_list = []
             for channel in channel_list:
                 channel_obj = self.bot.get_channel(channel)
@@ -236,26 +238,25 @@ class Chatchart(commands.Cog):
     @commands.guild_only()
     @commands.command()
     async def ccallow(self, ctx, channel: discord.TextChannel):
-        """Remove a channel from the deny list to allow chatchart use."""
+        """Remove a channel from the deny list to allow schreibzeig use."""
         channel_list = await self.config.guild(ctx.guild).channel_deny()
         if channel.id in channel_list:
             channel_list.remove(channel.id)
         else:
             return await ctx.send("Channel is not on the deny list.")
         await self.config.guild(ctx.guild).channel_deny.set(channel_list)
-        await ctx.send(f"{channel.mention} will be allowed for chatchart use.")
+        await ctx.send(f"{channel.mention} will be allowed for schreibzeig use.")
 
     @checks.is_owner()
     @commands.command()
     async def cclimit(self, ctx, limit_amount: int = None):
         """
         Limit the amount of messages someone can request.
-
         Use `0` for no limit.
         """
         if limit_amount is None:
             return await ctx.send_help()
         if limit_amount < 0:
-            return await ctx.send("You need to use a number larger than 0.")
+            return await ctx.send("Du musst a nummer größer als 0 benutzene.")
         await self.config.limit.set(limit_amount)
-        await ctx.send(f"Chatchart is now limited to {limit_amount} messages.")
+        await ctx.send(f"Schreibzeig ist limitiert uff {limit_amount} Nochrichtens.")
