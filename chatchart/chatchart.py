@@ -6,10 +6,10 @@
 
 import asyncio
 import heapq
+import discord
 from io import BytesIO
 from typing import Optional
 
-import discord
 import matplotlib
 
 matplotlib.use("agg")
@@ -172,8 +172,7 @@ class Schreibzeig(commands.Cog):
                 await em.delete()
             except discord.NotFound:
                 pass
-            return await ctx.send(
-                f"Nur Roboter haben Nachrichten in {channel.mention} gesendet oder ich kann die Nachrichtenhistorie nich guckene.")
+            return await ctx.send(f"Nur Roboter haben Nachrichten in {channel.mention} gesendet oder ich kann die Nachrichtenhistorie nich guckene.")
 
         for usr in msg_data["users"]:
             pd = float(msg_data["users"][usr]["msgcount"]) / float(msg_data["total count"])
