@@ -98,16 +98,16 @@ class WarcraftLogs(commands.Cog):
             return await ctx.send("The bot owner needs to set a WarcraftLogs API key before this can be used.")
         if not username:
             username = userdata["charname"]
-            if not username:
-                return await ctx.send("Please specify a character name with this command.")
+        if not username:
+            return await ctx.send("Please specify a character name with this command.")
         if not realmname:
             realmname = userdata["realm"]
-            if not realmname:
-                return await ctx.send("Please specify a realm name with this command.")
+        if not realmname:
+            return await ctx.send("Please specify a realm name with this command.")
         if not region:
             region = userdata["region"]
-            if not region:
-                return await ctx.send("Please specify a region name with this command.")
+        if not region:
+            return await ctx.send("Please specify a region name with this command.")
 
         final_embed_list = []
         kill_data = []
@@ -256,8 +256,7 @@ class WarcraftLogs(commands.Cog):
     @staticmethod
     def time_convert(time):
         time = str(time)[0:10]
-        value = datetime.datetime.fromtimestamp(int(time)).strftime("%Y-%m-%d %H:%M:%S")
-        return value
+        return datetime.datetime.fromtimestamp(int(time)).strftime("%Y-%m-%d %H:%M:%S")
 
     @staticmethod
     def get_kills(data, zone_and_phase):
@@ -268,29 +267,26 @@ class WarcraftLogs(commands.Cog):
             if encounter["encounterName"] not in boss_kills.keys():
                 boss_kills[encounter["encounterName"]] = 0
             boss_kills[encounter["encounterName"]] += 1
-        complete_info = {}
-        complete_info[zone_and_phase] = boss_kills
-        return complete_info
+        return {zone_and_phase: boss_kills}
 
     @staticmethod
     def get_zone(zone):
         # Zone ID and name is available from the API, but why make another
         # call to a url when it's simple for now... maybe revisit in phase 5+
         if zone == 1000:
-            zone_name = "MoltenCore"
+            return "MoltenCore"
         elif zone == 1001:
-            zone_name = "Onyxia"
+            return "Onyxia"
         elif zone == 1002:
-            zone_name = "BWL"
+            return "BWL"
         elif zone == 1003:
-            zone_name = "ZG"
+            return "ZG"
         elif zone == 1004:
-            zone_name = "AQ20"
+            return "AQ20"
         elif zone == 1005:
-            zone_name = "AQ40"
+            return "AQ40"
         else:
-            zone_name = None
-        return zone_name
+            return None
 
     @staticmethod
     def clean_name(zone_and_phase):
@@ -332,9 +328,7 @@ class WarcraftLogs(commands.Cog):
                 encounter["rank"],
                 encounter["outOf"],
             ]
-        complete_info = {}
-        complete_info[zone_and_phase] = report_ids
-        return complete_info
+        return {zone_and_phase: report_ids}
 
     @staticmethod
     def get_recent_gear(data):

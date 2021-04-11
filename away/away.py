@@ -48,11 +48,7 @@ class Away(commands.Cog):
         msg = "\n" + play_char + " "
 
         for i in range(sections):
-            if i == loc_time:
-                msg += seek_char
-            else:
-                msg += bar_char
-
+            msg += seek_char if i == loc_time else bar_char
         msg += " `{:.7}`/`{:.7}`".format(str(elapsed_time), str(total_time))
         return msg
 
@@ -101,8 +97,9 @@ class Away(commands.Cog):
             em = discord.Embed(color=author.activity.color)
             url = f"https://open.spotify.com/track/{author.activity.track_id}"
             artist_title = f"{author.activity.title} by " + ", ".join(
-                a for a in author.activity.artists
+                author.activity.artists
             )
+
             limit = 256 - (
                 len(author.display_name) + 27
             )  # incase we go over the max allowable size
@@ -122,7 +119,7 @@ class Away(commands.Cog):
             activity = [c for c in author.activities if c.type == discord.ActivityType.listening]
             em = discord.Embed(color=activity[0].color)
             url = f"https://open.spotify.com/track/{activity[0].track_id}"
-            artist_title = f"{activity[0].title} by " + ", ".join(a for a in activity[0].artists)
+            artist_title = f"{activity[0].title} by " + ", ".join(activity[0].artists)
             limit = 256 - (len(author.display_name) + 27)
             em.set_author(
                 name=f"{author.display_name} is currently listening to",
@@ -190,12 +187,15 @@ class Away(commands.Cog):
             status = [c for c in author.activities if c.type == discord.ActivityType.playing]
             msg = f"{author.display_name} is currently playing {status[0].name}"
         elif state == "listening":
-            artist_title = f"{author.activity.title} by " + ", ".join(a for a in author.activity.artists)
+            artist_title = f"{author.activity.title} by " + ", ".join(
+                author.activity.artists
+            )
+
             currently_playing = self._draw_play(author.activity)
             msg = f"{author.display_name} is currently listening to {artist_title}\n{currently_playing}"
         elif state == "listeningcustom":
             status = [c for c in author.activities if c.type == discord.ActivityType.listening]
-            artist_title = f"{status[0].title} by " + ", ".join(a for a in status[0].artists)
+            artist_title = f"{status[0].title} by " + ", ".join(status[0].artists)
             currently_playing = self._draw_play(status[0])
             msg = f"{author.display_name} is currently listening to {artist_title}\n{currently_playing}"
         elif state == "streaming":
@@ -206,10 +206,11 @@ class Away(commands.Cog):
         else:
             msg = f"{author.display_name} is currently away"
 
-        if message != " " and state != "listeningcustom":
-            msg += f" and has set the following message: `{message}`"
-        elif message != " " and state == "listeningcustom":
-            msg += f"\n\nCustom message: `{message}`"
+        if message != " ":
+            if state != "listeningcustom":
+                msg += f" and has set the following message: `{message}`"
+            else:
+                msg += f"\n\nCustom message: `{message}`"
 
         return msg
 
@@ -221,9 +222,7 @@ class Away(commands.Cog):
             return True
         if await self.bot.is_admin(member):
             return True
-        if await self.bot.is_mod(member):
-            return True
-        return False
+        return bool(await self.bot.is_mod(member))
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -257,7 +256,7 @@ class Away(commands.Cog):
                 if embed_links and not text_only:
                     em = await self.make_embed_message(author, away_msg, "away")
                     await message.channel.send(embed=em, delete_after=delete_after)
-                elif (embed_links and text_only) or not embed_links:
+                else:
                     msg = await self.make_text_message(author, away_msg, "away")
                     await message.channel.send(msg, delete_after=delete_after)
                 continue
@@ -270,7 +269,7 @@ class Away(commands.Cog):
                 if embed_links and not text_only:
                     em = await self.make_embed_message(author, idle_msg, "idle")
                     await message.channel.send(embed=em, delete_after=delete_after)
-                elif (embed_links and text_only) or not embed_links:
+                else:
                     msg = await self.make_text_message(author, idle_msg, "idle")
                     await message.channel.send(msg, delete_after=delete_after)
                 continue
@@ -283,7 +282,7 @@ class Away(commands.Cog):
                 if embed_links and not text_only:
                     em = await self.make_embed_message(author, dnd_msg, "dnd")
                     await message.channel.send(embed=em, delete_after=delete_after)
-                elif (embed_links and text_only) or not embed_links:
+                else:
                     msg = await self.make_text_message(author, dnd_msg, "dnd")
                     await message.channel.send(msg, delete_after=delete_after)
                 continue
@@ -296,7 +295,7 @@ class Away(commands.Cog):
                 if embed_links and not text_only:
                     em = await self.make_embed_message(author, offline_msg, "offline")
                     await message.channel.send(embed=em, delete_after=delete_after)
-                elif (embed_links and text_only) or not embed_links:
+                else:
                     msg = await self.make_text_message(author, offline_msg, "offline")
                     await message.channel.send(msg, delete_after=delete_after)
                 continue
@@ -306,7 +305,7 @@ class Away(commands.Cog):
                 if embed_links and not text_only:
                     em = await self.make_embed_message(author, streaming_msg, "streaming")
                     await message.channel.send(embed=em, delete_after=delete_after)
-                elif (embed_links and text_only) or not embed_links:
+                else:
                     msg = await self.make_text_message(author, streaming_msg, "streaming")
                     await message.channel.send(msg, delete_after=delete_after)
                 continue
@@ -318,7 +317,7 @@ class Away(commands.Cog):
                 if embed_links and not text_only:
                     em = await self.make_embed_message(author, streaming_msg, "streamingcustom")
                     await message.channel.send(embed=em, delete_after=delete_after)
-                elif (embed_links and text_only) or not embed_links:
+                else:
                     msg = await self.make_text_message(author, streaming_msg, "streamingcustom")
                     await message.channel.send(msg, delete_after=delete_after)
                 continue
@@ -328,7 +327,7 @@ class Away(commands.Cog):
                 if embed_links and not text_only:
                     em = await self.make_embed_message(author, listening_msg, "listening")
                     await message.channel.send(embed=em, delete_after=delete_after)
-                elif (embed_links and text_only) or not embed_links:
+                else:
                     msg = await self.make_text_message(author, listening_msg, "listening")
                     await message.channel.send(msg, delete_after=delete_after)
                 continue
@@ -340,7 +339,7 @@ class Away(commands.Cog):
                 if embed_links and not text_only:
                     em = await self.make_embed_message(author, listening_msg, "listeningcustom")
                     await message.channel.send(embed=em, delete_after=delete_after)
-                elif (embed_links and text_only) or not embed_links:
+                else:
                     msg = await self.make_text_message(author, listening_msg, "listeningcustom")
                     await message.channel.send(msg, delete_after=delete_after)
                 continue
@@ -352,11 +351,10 @@ class Away(commands.Cog):
                         if embed_links and not text_only:
                             em = await self.make_embed_message(author, game_msg, "gaming")
                             await message.channel.send(embed=em, delete_after=delete_after)
-                            break  # Let's not accidentally post more than one
-                        elif (embed_links and text_only) or not embed_links:
+                        else:
                             msg = await self.make_text_message(author, game_msg, "gaming")
                             await message.channel.send(msg, delete_after=delete_after)
-                            break
+                        break  # Let's not accidentally post more than one
             if gaming_msgs and type(author.activity) is discord.CustomActivity:
                 game_status = [c for c in author.activities if c.type == discord.ActivityType.playing]
                 if not game_status:
@@ -367,11 +365,10 @@ class Away(commands.Cog):
                         if embed_links and not text_only:
                             em = await self.make_embed_message(author, game_msg, "gamingcustom")
                             await message.channel.send(embed=em, delete_after=delete_after)
-                            break  # Let's not accidentally post more than one
-                        elif (embed_links and text_only) or not embed_links:
+                        else:
                             msg = await self.make_text_message(author, game_msg, "gamingcustom")
                             await message.channel.send(msg, delete_after=delete_after)
-                            break
+                        break  # Let's not accidentally post more than one
 
     @commands.command(name="away")
     async def away_(self, ctx, delete_after: Optional[int] = None, *, message: str = None):
@@ -537,12 +534,11 @@ class Away(commands.Cog):
                 bl_mems.append(member.id)
                 await self._away.guild(guild).BLACKLISTED_MEMBERS.set(bl_mems)
                 msg = f"Away messages will not appear when {member.display_name} is mentioned in this guild."
-                await ctx.send(msg)
-            elif member.id in bl_mems:
+            else:
                 bl_mems.remove(member.id)
                 await self._away.guild(guild).BLACKLISTED_MEMBERS.set(bl_mems)
                 msg = f"Away messages will appear when {member.display_name} is mentioned in this guild."
-                await ctx.send(msg)
+            await ctx.send(msg)
             return
         if guild.id in (await self._away.ign_servers()):
             guilds = await self._away.ign_servers()
@@ -604,10 +600,7 @@ class Away(commands.Cog):
             else:
                 msg += f"{name}: {status_msg}\n"
         if "GAME_MESSAGE" in settings:
-            if not settings["GAME_MESSAGE"]:
-                games = "False"
-            else:
-                games = "True"
+            games = "False" if not settings["GAME_MESSAGE"] else "True"
             msg += f"Games: {games}\n"
             for game in settings["GAME_MESSAGE"]:
                 status_msg, delete_after = settings["GAME_MESSAGE"][game]
